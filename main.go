@@ -12,6 +12,7 @@ import (
 func main() {
 	url := os.Getenv("EUREKA_URL")
 	log.Println("url:", url)
+
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		appID := request.URL.Query().Get("appID")
 
@@ -20,13 +21,15 @@ func main() {
 			log.Printf("get apps error: %v", err)
 			return
 		}
-		want := filter(apps, func(app client.App) bool {
+
+		filtered := filter(apps, func(app client.App) bool {
 			return strings.Contains(strings.ToLower(app.Name), appID)
 		})
+		wrapped := wrap(filtered)
 		header := writer.Header()
 		header.Add("Content-Type", "application/json; charset=utf-8")
 
-		content, err := json.Marshal(want)
+		content, err := json.Marshal(wrapped)
 		if err != nil {
 			log.Printf("marshal json error: %v", err)
 			return
@@ -41,12 +44,15 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func processData(apps []client.App) []string {
-	var ans []string
+func wrap(apps []client.App) []AppWrapper {
+	var ans []AppWrapper
 	for _, val := range apps {
+		var ap AppWrapper
+		ap.Name = val.Name
 		for _, instance := range val.Instance {
-			ans = append(ans, instance.IpAddr)
+			ap.Ips = append(ap.Ips, instance.IpAddr)
 		}
+		ans = append(ans, ap)
 	}
 	return ans
 }
@@ -59,4 +65,9 @@ func filter(gar *client.GetAppsResp, f func(app client.App) bool) []client.App {
 		}
 	}
 	return apps
+}
+
+type AppWrapper struct {
+	Name string   `json:"name,omitempty"`
+	Ips  []string `json:"ips,omitempty"`
 }
