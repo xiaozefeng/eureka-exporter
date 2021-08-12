@@ -3,23 +3,14 @@ package main
 import (
 	"encoding/json"
 	"eureka-exporter/client"
-	"flag"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
-var env string
-
 func main() {
-	var envMap = make(map[string]string)
-	envMap["prod"] = "http://139.159.217.102:9100/"
-	envMap["test"] = "http://172.16.0.11:9100/"
-	flag.StringVar(&env, "env", "prod", "env")
-	flag.Parse()
-
-	url := envMap[env]
-	//url := "http://139.159.217.102:9100/"
+	url := os.Getenv("EUREKA_URL")
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		appID := request.URL.Query().Get("appID")
 
