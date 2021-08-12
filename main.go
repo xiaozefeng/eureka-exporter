@@ -11,6 +11,7 @@ import (
 
 func main() {
 	url := os.Getenv("EUREKA_URL")
+	log.Println("url:", url)
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		appID := request.URL.Query().Get("appID")
 
@@ -36,6 +37,7 @@ func main() {
 			return
 		}
 	})
+	log.Println("server at: 8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
