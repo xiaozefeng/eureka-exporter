@@ -3,13 +3,22 @@ package main
 import (
 	"encoding/json"
 	"eureka-exporter/client"
+	"flag"
 	"log"
 	"net/http"
 	"strings"
 )
 
+var env string
+
 func main() {
-	url := "http://172.16.0.11:9100/"
+	var envMap = make(map[string]string)
+	envMap["prod"] = "http://139.159.217.102:9100/"
+	envMap["test"] = "http://172.16.0.11:9100/"
+	flag.StringVar(&env, "env", "prod", "env")
+	flag.Parse()
+
+	url := envMap[env]
 	//url := "http://139.159.217.102:9100/"
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		appID := request.URL.Query().Get("appID")
@@ -39,11 +48,11 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func processData(apps []client.App) []string{
+func processData(apps []client.App) []string {
 	var ans []string
 	for _, val := range apps {
 		for _, instance := range val.Instance {
-			ans= append(ans, instance.IpAddr)
+			ans = append(ans, instance.IpAddr)
 		}
 	}
 	return ans
